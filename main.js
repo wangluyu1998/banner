@@ -1,145 +1,104 @@
-var $carousel=(function(){
-    var $html = $(''
-      + '<div class="slider" id="slider">'
-        + '<div class="slide"><img src="img/b5.png" alt=""></div>'
-        + '<div class="slide"><img src="img/b1.png" alt=""></div>'
-        + '<div class="slide"><img src="img/b2.png" alt=""></div>'
-        + '<div class="slide"><img src="img/b3.png" alt=""></div>'
-        + '<div class="slide"><img src="img/b4.png" alt=""></div>'
-        + '<div class="slide"><img src="img/b5.png" alt=""></div>'
-        + '<div class="slide"><img src="img/b1.png" alt=""></div>'
-      + '</div>'
-      + '<span id="left"><</span>'
-      + '<span id="right">></span>'
-      + '<ul class="nav" id="navs">'
-        + '<li class="active">1</li>'
-        + '<li>2</li>'
-        + '<li>3</li>'
-        + '<li>4</li>'
-        + '<li>5</li>'
-      + '</ul>');
-  
-    function slide(){
-        var $box = $('#box');
-            $box.append($html);
-            $slider = $('#slider'),
-            $left = $('#left'),
-            $right = $('#right'),
-            $navs = $('#navs').children();
-        var index = 1,
-            isdone = 0,
-            timer = setInterval(next,2000);
+function Carousel(){
+    var cfg={
+        container:'#box',
+        index:1,
+        timer:3000,
+        imgs:['img/b1.png','img/b2.png','img/b3.png','img/b4.png','img/b5.png']
+      },
+      $box=$('#box'),
+      $slider=$('<div class="slider" id="slider"></div>'),
+      $left=$('<span id="left"><</span>'),
+      $right=$('<span id="right">></span>'),
+      $navs=$('<ul class="nav" id="navs"></ul>'),
+      index = 1,
+      isloading=false;
 
+      this.init = function(conf){
+        $.extend(cfg,conf);
+        $box.append($slider);
+        $slider.after($left);
+        $left.after($right);
+        $right.after($navs);
+        //init
+        var $slide=$('<div class="slide"><img src="'+cfg.imgs[cfg.imgs.length-1]+'" alt=""></div>')
+        $slider.append($slide);
+        for(var i=0;i<cfg.imgs.length;i++){
+            var $slide=$('<div class="slide"><img src="'+cfg.imgs[i]+'" alt=""></div>');
+            var $li=$('<li>'+(i+1)+'</li>');
+            $slider.append($slide);
+            $navs.append($li);
+        }
+        $navlist=$('#navs').children();
+        $slide=$('<div class="slide"><img src="'+cfg.imgs[0]+'" alt=""></div>');
+        $slider.append($slide);
+
+        //定时器自动轮播
+        timer=setInterval(next,cfg.timer);
+        $navs.children().first().addClass('active');
         //向前
         function prev(){
-            if(isdone != 0){}
-            isloading = 1;
+            if(isloading){return;}
+            isloading=true;
             index--;
-            navChange();
-            animate(slider, {left:-1200*index},function(){
-            if(index == 0){
-                slider.style.left = '-6000px';
-                index = 5;
+            if(index===0){
+                $slider.css("left",cfg.imgs.length*-1200+'px');
+                index=cfg.imgs.length;
+            }else{
+                $slider.stop().animate({left:index*-1200},300);
             }
-            isdone = 0;
-            });
+            isloading=false;
+            navChange();
+            console.log(index);
         }
         //向后
         function next(){
-            if(isdone != 0){}
-            isdone = 1;
+            if(isloading){return;}
+            isloading=true;
             index++;
-            navChange();
-            animate(slider, {left: -1200*index}, function(){
-            if(index == 6){
-                slider.style.left = '-1200px';
-                index = 1;
+            if(index===cfg.imgs.length+1){
+                $slider.css("left","-1200px");
+                index=1;
+            }else{
+                $slider.stop().animate({left:index*-1200},300);
             }
-            isdone = 0;
-            });
+            isloading=false;
+            navChange();
+            console.log(index);
         }
-        //鼠标划上，停止轮播，左右箭头淡入
+        //划入box
         $box.mouseover(function(){
-            left.style.opacity = 0.5;
-            right.style.opacity = 0.5;
+            $left.css("opacity",0.5);
+            $right.css("opacity",0.5);
             clearInterval(timer);
         })
-        //鼠标划出，继续轮播，左右箭头淡出
+        //划出box
         $box.mouseout(function(){
-            left.style.opacity = 0;
-            right.style.opacity = 0;
-            timer = setInterval(next,2000);
+            $left.css("opacity",0);
+            $right.css("opacity",0);
+            timer=setInterval(next,cfg.timer);
         })
-        //点击左右箭头，向前或向后滑动一张
-        $left.click(function(){
-            prev();
-        })
-        $right.click(function(){
-            next();
-        })
-        //点击圆点，切换图片
-        for(var i = 0; i < $navs.length; i++){
+        //点击左右箭头滑动
+        $left.click(prev);
+        $right.click(next);
+        //点击下方圆点跳转
+        for(var i=0;i<$navlist.length;i++){
             (function(i){
-            $navs[i].onclick = function(){
-                index = i+1;
+              $navlist[i].onclick = function(){
+                index=i+1;
+                $slider.stop().animate({left:index*-1200},300);
                 navChange();
-                animate(slider,{left:-1200*index});
-            }
+              }
             })(i);
         }
-        //圆点的样式变化
+        //圆点的变化
         function navChange(){
-            for(var i=0;i<$navs.length;i++){
-                $navs[i].className="";
-            }
-            if(index==6){
-                $navs[0].className="active";
-            }
-            else if(index==0){
-                $navs[4].className="active";
-            }
-            else{
-                $navs[index-1].className="active";
-            }
-        }
-    
-        function getStyle(obj, attr){
-            if(obj.currentStyle){
-            return obj.currentStyle[attr];
-            } else {
-            return getComputedStyle(obj, null)[attr];
-            }
-        }
-    
-        function animate(obj,json,callback){
-            clearInterval(obj.timer);
-            obj.timer=setInterval(function(){
-            var isStop=true;
-            for(var attr in json){
-                var now=0;
-                if(attr == 'opacity'){
-                now=parseInt(getStyle(obj, attr) * 100);
-                }else{
-                now=parseInt(getStyle(obj, attr));
-                }
-                var speed=(json[attr]-now)/8;
-                speed = speed>0 ? Math.ceil(speed) : Math.floor(speed);
-                var cur = now + speed;
-                if(attr == 'opacity'){
-                obj.style[attr]=cur/100;
-                }else{
-                obj.style[attr]=cur+'px';
-                }
-                if(json[attr]!==cur){
-                isStop = false;
-                }
-            }
-            if(isStop){
-                clearInterval(obj.timer);
-                callback&&callback();
-            }
-            }, 30)
-        }
+            // if(index===0){
+            //     $navs.children().first().addClass('active');
+            //     $navs.children('li').siblings().removeClass('active');
+            //     $navs.children('li').eq(index-1).addClass('active');    
+            // }
+            $navs.children('li').siblings().removeClass('active');
+            $navs.children('li').eq(index-1).addClass('active');
+        };
     }
-    return {slide : slide}
-})()
+}

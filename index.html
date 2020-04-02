@@ -15,7 +15,11 @@
   <script src="./main.js"></script>
   <script>
     $(function(){
-      $carousel.slide();        
+      new Carousel().init({
+        container:'#box',
+        timer:3000,
+        imgs:['img/b1.png','img/b2.png','img/b3.png','img/b4.png','img/b5.png']
+      })      
     })
   </script>
 </html>
